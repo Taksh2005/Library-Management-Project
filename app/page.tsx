@@ -1,61 +1,16 @@
-import Itemcard from "./components/Itemcard";
+import { getAllResourceIds } from "./actions/serverActions";
+import ResourceCard from "./components/ResourceCard";
 
-export default function Home() {
-  const data = [
-    {
-      imageUrl:
-        "https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg",
-      title: "The Great Book",
-      rating: 4.8,
-      type: "Book",
-      link: "/details/the-great-book",
-    },
-    {
-      imageUrl:
-        "https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg",
-      title: "The Book",
-      rating: 4.8,
-      type: "Book",
-      link: "/details/the-great-book",
-    },
-    {
-      imageUrl:
-        "https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg",
-      title: "The Great Book",
-      rating: 4.8,
-      type: "Book",
-      link: "/details/the-great-book",
-    },
-    {
-      imageUrl:
-        "https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg",
-      title: "The Book",
-      rating: 4.8,
-      type: "Book",
-      link: "/details/the-great-book",
-    },
-    {
-      imageUrl:
-        "https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg",
-      title: "The Great Book",
-      rating: 4.8,
-      type: "Book",
-      link: "/details/the-great-book",
-    },
-    {
-      imageUrl:
-        "https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg",
-      title: "The Book",
-      rating: 4.8,
-      type: "Book",
-      link: "/details/the-great-book",
-    },
-  ];
+export default async function Home() {
+  const ids = await getAllResourceIds();
+
   return (
-    <div className="px-8 flex flex-wrap gap-2">
-      {data.map((item) => {
-        return <Itemcard itemProps={item} />;
-      })}
-    </div>
+    <main className="px-4 sm:px-8 py-6">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {ids.map(id => (
+          <ResourceCard key={id} resourceId={id} />
+        ))}
+      </div>
+    </main>
   );
 }

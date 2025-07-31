@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  phone        String?
+  userType     UserType
+  createdAt    DateTime       @default(now())
+  transactions Transaction[]
+  reservations Reservation[]
+  credential   Credential?
+  librarian    Librarian?
+  auditLogs    AuditLog[]
+}
+
+model Resource {
+  id              Int             @id @default(autoincrement())
+  title           String
+  resourceType    ResourceType
+  publisher       String?
+  yearPublished   Int?
+  totalCopies     Int
+  availableCopies Int
+  categoryId      Int?
+  category        Category?       @relation(fields: [categoryId], references: [id])
+
+  transactions    Transaction[]
+  reservations    Reservation[]
+  book            Book?
+  magazine        Magazine?
+  dvd             DVD?
+  ebook           Ebook?
+}
+
+model Book {
+  resourceId Int     @id
+  author     String
+  isbn       String  @unique
+  resource   Resource @relation(fields: [resourceId], references: [id])
+}
+
+model Magazine {
+  resourceId  Int     @id
+  issueNumber String
+  month       String
+  resource    Resource @relation(fields: [resourceId], references: [id])
+}
+
+model DVD {
+  resourceId  Int     @id
+  durationMin Int
+  director    String
+  resource    Resource @relation(fields: [resourceId], references: [id])
+}
+
+model Ebook {
+  resourceId Int     @id
+  fileUrl    String
+  format     String
+  resource   Resource @relation(fields: [resourceId], references: [id])
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  resources Resource[]
+}
+
+model Transaction {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  resourceId   Int
+  issueDate    DateTime
+  dueDate      DateTime
+  returnDate   DateTime?
+  status       TransactionStatus
+
+  user         User      @relation(fields: [userId], references: [id])
+  resource     Resource  @relation(fields: [resourceId], references: [id])
+  fine         Fine?
+}
+
+model Fine {
+  id             Int     @id @default(autoincrement())
+  transactionId  Int     @unique
+  amount         Decimal @db.Decimal(8, 2)
+  paid           Boolean @default(false)
+  paidDate       DateTime?
+
+  transaction    Transaction @relation(fields: [transactionId], references: [id])
+}
+
+model Reservation {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  resourceId  Int
+  reservedAt  DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+  resource    Resource  @relation(fields: [resourceId], references: [id])
+}
+
+model Credential {
+  id           Int     @id @default(autoincrement())
+  userId       Int     @unique
+  username     String  @unique
+  passwordHash String
+
+  user         User    @relation(fields: [userId], references: [id])
+}
+
+model Librarian {
+  id        Int     @id @default(autoincrement())
+  userId    Int     @unique
+  staffId   String  @unique
+  joinedAt  DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Admin {
+  id            Int     @id @default(autoincrement())
+  username      String  @unique
+  email         String  @unique
+  passwordHash  String
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String
+  timestamp DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum UserType {
+  User
+  Librarian
+  Admin
+}
+
+enum ResourceType {
+  Book
+  Magazine
+  DVD
+  Ebook
+}
+
+enum TransactionStatus {
+  Issued
+  Returned
+  Overdue
+}
