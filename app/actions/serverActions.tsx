@@ -64,18 +64,76 @@ export async function addResource({ title, resourceType, publisher, yearPublishe
   });
 }
 
-export async function getAllResourceIds() {
-  try {
-    const resources = await prisma.resource.findMany({
-      select: { id: true },
-    });
-
-    return resources.map(r => r.id); // returns: number[]
-  } catch (error) {
-    console.error('Error fetching resource IDs:', error);
-    return [];
+export async function getAllResourceIds(): Promise<number[]> {
+  try{const resources = await prisma.resource.findMany({
+    select: { id: true },
+  });
+  return resources.map((r) => r.id);}
+  catch(all){
+    return []
   }
 }
+
+export async function getResourceById(id: number) {
+  return await prisma.resource.findUnique({
+    where: { id },
+    include: {
+      category: true,
+    },
+  });
+}
+
+
+export async function getFilteredResources(filters: any) {
+  const { type, year, publisher, category, sortField, sortOrder } = filters;
+
+  return await prisma.resource.findMany({
+    where: {
+      ...(type && { resourceType: type }),
+      ...(year && { yearPublished: parseInt(year) }),
+      ...(publisher && { publisher: { contains: publisher, mode: 'insensitive' } }),
+      ...(category && {
+        category: {
+          name: { contains: category, mode: 'insensitive' },
+        },
+      }),
+    },
+    orderBy: {
+      [sortField || 'createdAt']: sortOrder || 'desc',
+    },
+  });
+}
+
+
+
+export async function getAllPublishers() {
+  return prisma.resource.findMany({
+    distinct: ['publisher'],
+    select: { publisher: true },
+    where: { publisher: { not: null } },
+  });
+}
+
+export async function getAllYears() {
+  return prisma.resource.findMany({
+    distinct: ['yearPublished'],
+    select: { yearPublished: true },
+    where: { yearPublished: { not: null } },
+    orderBy: { yearPublished: 'desc' },
+  });
+}
+
+
+// Component support hooks
+export async function getAllFilterOptions() {
+  const [categories, publishers, years] = await Promise.all([
+    getAllCategories(),
+    getAllPublishers(),
+    getAllYears(),
+  ]);
+  return { categories, publishers, years };
+}
+
 
 export async function getAllResources() {
   return prisma.resource.findMany({ include: { book: true, magazine: true, dvd: true, ebook: true } });

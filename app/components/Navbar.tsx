@@ -23,7 +23,9 @@ function Navbar() {
           <Link href={"/about"} className="text-gray-300 hover:text-gray-100">
             About
           </Link>
-          <Link href={""}></Link>
+          <Link href={"/add"} className="text-gray-300 hover:text-gray-100">
+            Add
+          </Link>
           <Link href={""}></Link>
         </div>
       </div>

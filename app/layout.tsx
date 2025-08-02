@@ -16,8 +16,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="">
         <Navbar />
-        <div className="p-3"></div>
-        {children}
+        <div className="p-3 flex items-center justify-center">
+          {children}
+        </div>
+        
       </body>
     </html>
   );

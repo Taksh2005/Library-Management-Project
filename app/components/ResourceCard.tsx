@@ -1,4 +1,3 @@
-// app/components/ResourceCard.tsx (or wherever you keep server components)
 import React from 'react';
 import { prisma } from '@/lib/prisma';
 
@@ -6,6 +5,68 @@ interface Props {
   resourceId: number;
 }
 
+function getResourceImage(resourceType: string) {
+  switch (resourceType) {
+    case 'Book':
+      return 'https://www.shutterstock.com/image-photo/blue-book-isolated-on-white-600nw-2179864007.jpg';
+    case 'Magazine':
+      return 'https://unblast.com/wp-content/uploads/2020/03/Top-View-Magazine-Mockup-1.jpg';
+    case 'DVD':
+      return 'https://www.shutterstock.com/image-vector/vector-3d-realistic-opened-cd-600nw-1824116351.jpg';
+    case 'Ebook':
+      return 'https://d34mvw1if3ud0g.cloudfront.net/65282/Amazon-Kindle--2024-_20250418-053045_full.jpeg';
+    default:
+      return '/images/default.png';
+  }
+}
+export async function ListViewCard({ resourceId }: Props){
+  const resource = await prisma.resource.findUnique({
+    where: { id: resourceId },
+    include: {
+      category: true,
+      book: true,
+      magazine: true,
+      dvd: true,
+      ebook: true,
+    },
+  });
+
+  if (!resource) {
+    return <div className="text-red-500">Resource not found</div>;
+  }
+
+  const isAvailable = resource.availableCopies > 0;
+  const imageSrc = getResourceImage(resource.resourceType);
+
+  return(
+    <li className="p-3 m-2 max-w-2xl sm:py-4 sm:max-w-full  bg-white border border-gray-200 rounded-lg shadow-sm sm:p-8 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center">
+                    <div className="shrink-0">
+                        <img className="w-25 h-25 rounded-xl" src={imageSrc} alt="Neil image"/>
+                    </div>
+                    <div className="flex-1 min-w-0 ms-4">
+                        <p className="text-lg font-medium text-gray-900 truncate dark:text-white">
+                            {resource.title}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+                            {resource.resourceType}
+                        </p>
+                    </div>
+                    <div className="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white">
+                        <span
+        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+          isAvailable
+            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+        }`}
+      >
+        {isAvailable ? 'Available' : 'Unavailable'}
+      </span>
+                    </div>
+                </div>
+            </li>
+  )
+}
 export default async function ResourceCard({ resourceId }: Props) {
   const resource = await prisma.resource.findUnique({
     where: { id: resourceId },
@@ -22,57 +83,30 @@ export default async function ResourceCard({ resourceId }: Props) {
     return <div className="text-red-500">Resource not found</div>;
   }
 
+  const isAvailable = resource.availableCopies > 0;
+  const imageSrc = getResourceImage(resource.resourceType);
+
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700">
-      <h2 className="text-xl font-semibold mb-2">{resource.title}</h2>
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Type: <span className="font-medium">{resource.resourceType}</span></p>
-      {resource.publisher && (
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Publisher: {resource.publisher}</p>
-      )}
-      {resource.yearPublished && (
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Year: {resource.yearPublished}</p>
-      )}
-      {resource.category && (
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Category: {resource.category.name}</p>
-      )}
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-        Copies: {resource.availableCopies} / {resource.totalCopies}
-      </p>
+    <div className="bg-white dark:bg-gray-800 shadow-md rounded-xl p-3 w-full max-w-[180px] border border-gray-200 dark:border-gray-700 flex flex-col items-center space-y-2">
+      <img
+        src={imageSrc}
+        alt={`${resource.resourceType} cover`}
+        className="w-24 h-24 object-cover rounded"
+      />
 
-      {resource.resourceType === 'Book' && resource.book && (
-        <div className="mt-3">
-          <p className="text-sm text-gray-700 dark:text-gray-200">Author: {resource.book.author}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">ISBN: {resource.book.isbn}</p>
-        </div>
-      )}
+      <h2 className="text-sm font-semibold text-center text-gray-800 dark:text-white line-clamp-2">
+        {resource.title}
+      </h2>
 
-      {resource.resourceType === 'Magazine' && resource.magazine && (
-        <div className="mt-3">
-          <p className="text-sm text-gray-700 dark:text-gray-200">Issue: {resource.magazine.issueNumber}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">Month: {resource.magazine.month}</p>
-        </div>
-      )}
-
-      {resource.resourceType === 'DVD' && resource.dvd && (
-        <div className="mt-3">
-          <p className="text-sm text-gray-700 dark:text-gray-200">Director: {resource.dvd.director}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">Duration: {resource.dvd.durationMin} mins</p>
-        </div>
-      )}
-
-      {resource.resourceType === 'Ebook' && resource.ebook && (
-        <div className="mt-3">
-          <p className="text-sm text-gray-700 dark:text-gray-200">Format: {resource.ebook.format}</p>
-          <a
-            href={resource.ebook.fileUrl}
-            className="text-blue-600 dark:text-blue-400 text-sm underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Download Ebook
-          </a>
-        </div>
-      )}
+      <span
+        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+          isAvailable
+            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+        }`}
+      >
+        {isAvailable ? 'Available' : 'Unavailable'}
+      </span>
     </div>
   );
 }
