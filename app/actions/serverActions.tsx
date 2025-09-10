@@ -84,6 +84,22 @@ export async function getResourceById(id: number) {
 }
 
 
+// Fetch only paginated resources
+export async function getPaginatedResourceIds(page: number, perPage: 30) {
+  return prisma.resource.findMany({
+    skip: (page - 1) * perPage,
+    take: perPage,
+    orderBy: { id: "desc" }, // change if you want different order
+    select: { id: true }, // only fetch IDs since you’re using them
+  });
+}
+
+// Get total resource count (for pagination)
+export async function getResourceCount() {
+  return prisma.resource.count();
+}
+
+
 
 // BOOK / MAGAZINE / DVD / EBOOK Subtypes
 export async function createBook({ resourceId, author, isbn }: { resourceId: number, author: string, isbn: string }) {

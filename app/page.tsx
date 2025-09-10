@@ -1,19 +1,14 @@
-import { getAllResourceIds } from "./actions/serverActions";
-import FilterComponent from "./components/FilterComponent";
-import ResourceCard, { ListViewCard } from "./components/ResourceCard";
+import { getPaginatedResourceIds, getResourceCount } from "./actions/serverActions";
+import { ListViewCard } from "./components/ResourceCard";
 import Link from "next/link";
+
+export const revalidate = 10800; // 3 hours
 
 const ITEMS_PER_PAGE = 30;
 
-function getPageItems(ids: any, page: number): number[] {
-  const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  return ids.slice(startIndex, endIndex);
-}
-
 function PaginationControls({
   currentPage,
-  totalPages
+  totalPages,
 }: {
   currentPage: number;
   totalPages: number;
@@ -99,7 +94,7 @@ function PaginationControls({
 
 function TopPaginationControls({
   currentPage,
-  totalPages
+  totalPages,
 }: {
   currentPage: number;
   totalPages: number;
@@ -135,14 +130,17 @@ export default async function Home({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
-  const ids = await getAllResourceIds();
-  const searchParam = await searchParams;
-  const currentPage = Number(searchParam.page) || 1;
-  const totalPages = Math.ceil(ids.length / ITEMS_PER_PAGE);
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
 
-  // Ensure current page is within bounds
+  // Run both queries in parallel
+  const [resources, totalCount] = await Promise.all([
+    getPaginatedResourceIds(currentPage, ITEMS_PER_PAGE),
+    getResourceCount(),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
   const validPage = Math.max(1, Math.min(currentPage, totalPages));
-  const paginatedIds = getPageItems(ids, validPage);
 
   return (
     <div className="w-full p-4 max-w-400">
@@ -158,17 +156,17 @@ export default async function Home({
         )}
       </div>
 
-      <ul role="list" className="grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3">
-        {paginatedIds.map(id => (
+      <ul
+        role="list"
+        className="grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3"
+      >
+        {resources.map(({ id }) => (
           <ListViewCard key={id} resourceId={id} />
         ))}
       </ul>
 
       {totalPages > 1 && (
-        <PaginationControls
-          currentPage={validPage}
-          totalPages={totalPages}
-        />
+        <PaginationControls currentPage={validPage} totalPages={totalPages} />
       )}
     </div>
   );
