@@ -1,5 +1,7 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
+import Link from 'next/link';
+import { getResourceById } from '../actions/serverActions';
 
 interface Props {
   resourceId: number;
@@ -20,17 +22,7 @@ function getResourceImage(resourceType: string) {
   }
 }
 export async function ListViewCard({ resourceId }: Props){
-  const resource = await prisma.resource.findUnique({
-    where: { id: resourceId },
-    include: {
-      category: true,
-      book: true,
-      magazine: true,
-      dvd: true,
-      ebook: true,
-    },
-  });
-
+  const resource = await getResourceById(resourceId);
   if (!resource) {
     return <div className="text-red-500">Resource not found</div>;
   }
@@ -39,7 +31,8 @@ export async function ListViewCard({ resourceId }: Props){
   const imageSrc = getResourceImage(resource.resourceType);
 
   return(
-    <li className="p-3 m-2 max-w-2xl sm:py-4 sm:max-w-full  bg-white border border-gray-200 rounded-lg shadow-sm sm:p-8 dark:bg-gray-800 dark:border-gray-700">
+    <Link href={"/resource/"+`${resourceId}`}>
+      <li className="p-3 m-2 max-w-2xl sm:py-4 sm:max-w-full  bg-white border border-gray-200 rounded-lg shadow-sm sm:p-8 dark:bg-gray-800 dark:border-gray-700">
                 <div className="flex items-center">
                     <div className="shrink-0">
                         <img className="w-25 h-25 rounded-xl" src={imageSrc} alt="Neil image"/>
@@ -65,6 +58,7 @@ export async function ListViewCard({ resourceId }: Props){
                     </div>
                 </div>
             </li>
+    </Link>
   )
 }
 export default async function ResourceCard({ resourceId }: Props) {

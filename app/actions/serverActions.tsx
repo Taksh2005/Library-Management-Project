@@ -76,7 +76,7 @@ export async function getAllResourceIds(): Promise<number[]> {
 
 export async function getResourceById(id: number) {
   return await prisma.resource.findUnique({
-    where: { id },
+    where: { id:id },
     include: {
       category: true,
     },
@@ -84,60 +84,6 @@ export async function getResourceById(id: number) {
 }
 
 
-export async function getFilteredResources(filters: any) {
-  const { type, year, publisher, category, sortField, sortOrder } = filters;
-
-  return await prisma.resource.findMany({
-    where: {
-      ...(type && { resourceType: type }),
-      ...(year && { yearPublished: parseInt(year) }),
-      ...(publisher && { publisher: { contains: publisher, mode: 'insensitive' } }),
-      ...(category && {
-        category: {
-          name: { contains: category, mode: 'insensitive' },
-        },
-      }),
-    },
-    orderBy: {
-      [sortField || 'createdAt']: sortOrder || 'desc',
-    },
-  });
-}
-
-
-
-export async function getAllPublishers() {
-  return prisma.resource.findMany({
-    distinct: ['publisher'],
-    select: { publisher: true },
-    where: { publisher: { not: null } },
-  });
-}
-
-export async function getAllYears() {
-  return prisma.resource.findMany({
-    distinct: ['yearPublished'],
-    select: { yearPublished: true },
-    where: { yearPublished: { not: null } },
-    orderBy: { yearPublished: 'desc' },
-  });
-}
-
-
-// Component support hooks
-export async function getAllFilterOptions() {
-  const [categories, publishers, years] = await Promise.all([
-    getAllCategories(),
-    getAllPublishers(),
-    getAllYears(),
-  ]);
-  return { categories, publishers, years };
-}
-
-
-export async function getAllResources() {
-  return prisma.resource.findMany({ include: { book: true, magazine: true, dvd: true, ebook: true } });
-}
 
 // BOOK / MAGAZINE / DVD / EBOOK Subtypes
 export async function createBook({ resourceId, author, isbn }: { resourceId: number, author: string, isbn: string }) {

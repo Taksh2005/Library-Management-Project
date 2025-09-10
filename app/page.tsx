@@ -1,4 +1,5 @@
 import { getAllResourceIds } from "./actions/serverActions";
+import FilterComponent from "./components/FilterComponent";
 import ResourceCard, { ListViewCard } from "./components/ResourceCard";
 import Link from "next/link";
 
@@ -132,10 +133,11 @@ function TopPaginationControls({
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   const ids = await getAllResourceIds();
-  const currentPage = Number(searchParams.page) || 1;
+  const searchParam = await searchParams;
+  const currentPage = Number(searchParam.page) || 1;
   const totalPages = Math.ceil(ids.length / ITEMS_PER_PAGE);
 
   // Ensure current page is within bounds
@@ -156,7 +158,7 @@ export default async function Home({
         )}
       </div>
 
-      <ul role="list" className="grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3 divide-y divide-gray-200 dark:divide-gray-700">
+      <ul role="list" className="grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3">
         {paginatedIds.map(id => (
           <ListViewCard key={id} resourceId={id} />
         ))}
